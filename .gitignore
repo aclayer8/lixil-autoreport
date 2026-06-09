@@ -1,0 +1,17 @@
+samples/
+output/
+
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+*.log
+*.bak_*
+.DS_Store
+Thumbs.db
+
+*.xls
+*.xlsx
+*.csv
+*.zip

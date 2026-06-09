@@ -1,0 +1,1138 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIXIL Reports</title>
+<link rel="stylesheet" href="/static/vendor/bootstrap.min.css">
+<script src="/static/vendor/chart.umd.min.js"></script>
+<style>
+:root{--orange:#F15A22;--navy:#0D1B35;--sidebar-w:230px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:100vh;overflow:hidden}
+
+/* Sidebar */
+#sidebar{width:var(--sidebar-w);background:var(--navy);color:#fff;display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+#sidebar .logo{padding:18px 16px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:10px}
+#sidebar .logo span{font-size:22px;font-weight:800;letter-spacing:1px;color:#fff}
+#sidebar .logo small{font-size:10px;color:rgba(255,255,255,0.5);display:block;margin-top:2px}
+#sidebar .section-label{font-size:10px;color:rgba(255,255,255,0.4);padding:14px 16px 6px;text-transform:uppercase;letter-spacing:1px}
+#sidebar .nav-item{padding:10px 16px;cursor:pointer;border-left:3px solid transparent;transition:all 0.2s;font-size:12.5px;color:rgba(255,255,255,0.75);display:flex;align-items:flex-start;gap:8px}
+#sidebar .nav-item:hover{background:rgba(255,255,255,0.07);color:#fff}
+#sidebar .nav-item.active{background:rgba(241,90,34,0.15);border-left-color:var(--orange);color:#fff}
+#sidebar .nav-item .num{font-size:10px;background:rgba(255,255,255,0.15);border-radius:3px;padding:1px 5px;margin-top:1px;flex-shrink:0}
+#sidebar .nav-item.active .num{background:var(--orange)}
+
+/* Main */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:var(--orange);color:#fff;padding:0 20px;height:48px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+#topbar h1{font-size:14px;font-weight:600}
+.content-actions{background:#fff;padding:20px 20px 12px;display:flex;gap:8px;align-items:center}
+
+#content{flex:1;overflow-y:auto;padding:20px}
+
+/* Cards */
+.card-box{background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.07);padding:20px;margin-bottom:20px}
+.card-box h5{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f2f5}
+
+/* Upload zone */
+#upload-zone{border:2px dashed #cdd;border-radius:10px;padding:40px;text-align:center;cursor:pointer;transition:all 0.2s;background:#fafbfc}
+#upload-zone:hover,#upload-zone.drag-over{border-color:var(--orange);background:#fff6f2}
+#upload-zone .icon{font-size:40px;margin-bottom:10px}
+#upload-zone p{color:#888;font-size:13px}
+#upload-zone strong{color:var(--navy)}
+
+/* Buttons */
+.btn-lixil{background:#2f6fff;color:#fff;border:1px solid #2f6fff;padding:8px 18px;border-radius:0;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,0.18)}
+.btn-lixil:hover{opacity:0.88;box-shadow:0 3px 8px rgba(0,0,0,0.2)}
+.btn-lixil:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none}
+.btn-excel{background:#52c41a;color:#fff;border:1px solid #52c41a;padding:8px 18px;border-radius:0;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.18)}
+.btn-excel:hover{background:#1a5c38;box-shadow:0 3px 8px rgba(0,0,0,0.2)}
+.btn-excel:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none}
+.btn-navy{background:#f5222d;color:#fff;border:1px solid #f5222d;padding:8px 18px;border-radius:0;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.18)}
+.btn-navy:hover{opacity:0.88;box-shadow:0 3px 8px rgba(0,0,0,0.2)}
+
+/* Chart container */
+.chart-wrapper{position:relative;height:320px;width:100%}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-row .chart-wrapper{height:260px}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.data-table th{background:var(--navy);color:#fff;padding:9px 12px;text-align:center;font-weight:600;font-size:12px}
+.data-table td{padding:7px 12px;text-align:center;border-bottom:1px solid #f0f2f5}
+.data-table tr:nth-child(even) td{background:#f8f9fa}
+.data-table tr:hover td{background:#fff6f2}
+.data-table .total-row td{background:#fff3ee;font-weight:700;color:var(--navy)}
+.table-scroll{overflow-x:auto;max-height:380px;overflow-y:auto}
+
+/* Spinner */
+#spinner{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:9999}
+#spinner.show{display:flex}
+.spinner-box{background:#fff;border-radius:12px;padding:32px 40px;text-align:center}
+.spinner-box .spin{width:48px;height:48px;border:4px solid #eee;border-top-color:var(--orange);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Empty state */
+#empty-state{text-align:center;padding:60px 20px;color:#aaa}
+#empty-state .big-icon{font-size:64px;margin-bottom:16px;opacity:0.4}
+#empty-state p{font-size:14px}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:24px;background:#333;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;transform:translateY(80px);transition:transform 0.3s;z-index:9999}
+#toast.show{transform:translateY(0)}
+#toast.error{background:#c0392b}
+#toast.success{background:#27ae60}
+
+/* Pie grid */
+.pie-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.pie-item{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+.pie-item h6{font-size:12px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:8px}
+.pie-item .chart-wrapper{height:200px}
+
+/* Stats cards */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.stat-card{background:#fff;border-radius:8px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,0.07);text-align:center}
+.stat-card .val{font-size:26px;font-weight:800;color:var(--orange)}
+.stat-card .lbl{font-size:11px;color:#888;margin-top:2px}
+
+
+/* CSAT legacy-style page */
+.csat-summary{background:#fff;margin-bottom:8px}
+.csat-tab-title{color:#d9671f;font-size:13px;font-weight:600;margin:0 0 12px 0;padding-bottom:12px;border-bottom:2px solid #f15a22;width:85px}
+.csat-metric-row{display:flex;flex-wrap:wrap;align-items:stretch}
+.csat-metric-card{width:170px;min-height:90px;border:1px solid #e8e8e8;background:#fff;padding:20px 18px;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:8px}
+.csat-row-bottom .csat-metric-card{width:217px}
+.csat-label{font-size:12px;color:#777;text-align:center;white-space:normal}
+.csat-label.strong{font-weight:700;color:#111;text-align:left}
+.csat-value{font-size:22px;line-height:1.2;font-weight:400;text-align:center}
+.csat-total-input{width:96px;height:32px;border:1px solid #d9d9d9;text-align:center;margin:0 auto;font-size:14px}
+
+
+.csat-empty-box{height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#8c8c8c;font-size:13px;gap:8px}
+.csat-empty-icon{font-size:34px;color:#d9d9d9;line-height:1}
+#content{background:#f0f2f5}
+#report-content{background:#fff;padding:0;margin:0}
+#table-section.card-box{box-shadow:none;border-radius:0;padding:0;margin-top:8px}
+#table-section h5{display:none}
+.csat-summary{padding:20px 20px 0 20px;background:#fff}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div class="logo">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAABxCAYAAACkwXoWAAAABmJLR0QA/wD/AP+gvaeTAAAUuElEQVR4nO3de5xcZXkH8N9zzuzMmSUJgWQuCdck0igqtLRYEPtpbLFota2N7keyOzO5gLEhIlgvgKV1EfmItagQLi2SZDOzuwGXKla0ftR6oWqpgLUiXoiAJWF3Z5YQQpI9Z3Z3ztM/Qkh2s7fZOe/7zpx5vv/t7szzPAuTZ99z3ssBhBBCCCGEEEIIIZpLKeP8UTET63uiDVHTtQShlHVuHMxGX2e6DlG/LNMFCPO4DXYx53Qy4bsgevfiWOxTpmuqVSkb28zA9QTrkcFM7CoGyHRNov7Ih6LJ9efip9vMPQDedMy3mcDvSBbKXzdVVy0GOlrPtyz/PwHEjnyPQA9WIvaGJdsPDhksTdQZaYBNrJiL/zWY7wFw8iQ/HrLYOjfRPTygu65avNh+4kllu/wYgGWT/LhE4PWN2thF8OQSuAk9sw7OYDZ+K5i/hMmbHwAkmPxe7myczwh3wipb5R5M3vwAIMmgBwez8Vt3XXl0dCiaV8N8uEUwirnoOa0V5zECf2Cm1zKwqvR0/EM66grC0FPONSC8bYaXEYE/sODF2H/1Z6Ov0VKYqFtyCdwkGKChTGwzE30GgFPFW0csWBclCsOPqqotCMVc/EIwPwQgUsXbhplxVbrbu0dVXaK+SQNsAv1r5i+ORMa2Mfgv5hjiqYjvnbeoBy8FWlhA9q3DwpGK8xNMfek7A/7XFq982cl92B9oYaLuySVwyA3knDfbkdGf1tD8AGDFGDm3BVZUwEZ8507MufkBAL1r1HF+XMy0nBtYUaIhSAMMKV6FSDHndFqMbwE4peaAhLXFjNNRe2XBKmadjWCsCSDU74DshwczsasCiCUahFwCh1B/u3OGbaEHhIsCDn2QKnxesre8K+C4czLQET3bsqxHALQGG5m/1OKVN8glcfjJCDBkBrPxS+0I/a+C5gcA89imAm9Ei4LYVdndhrhl2/ci8OYHALR6xHEeLrXHzgo+tqgn40aA/e3OGTZgB5kgQjSyqMfdE2RM3YrtznKyqE1F7ESr+1m6G6NBxBrMOB8jwk1BxJoOA59KF7yPqc4znWIufieYNylO84IF65KgZsD3dsRPrRDU3EYou3ck+3BQSeyX9efip9tjXM0s+4wqERpbmnefDTJmNcb9MraNRwEsDjLBGOFxAOcEGVM3svnVDNysIvYAsAUIpgGy7X+FfOsfALWLfAm4ZjDrfDtd8L6jMs9Uitn4ag3NDwBOrnBlaVDBKjbOZGYlnyMr1poHhpU2QJv5Idg4I+CYzwBYHmTMasglcIgs2THyBBF1akhlEZDvXzM/0D+Ws7G3I34qwHdrSUZ0V7q7/G9acgkjJjZANlKFCExiufuPYPxQQ6pTrMjoDp2nrHAb7IrFBQCLVOci4JcVx/2w6jwNJnT9QRpgyFAnfDviXw7AVZ4L+PNSLqbjUhQAMOQ4nQys0pCqDNtuX3o3hjXkaiSh6w/SAENocdfIr0D0cS3JmG4Z7Ii+XnWagYyzioHrVOcBAAZdm+w69FMduRpM6PqDNMCQSrruZwH8QEMqhyxr5+42xFUl6F8zf7FF6EbAKxSm8I1Uwb1VQ55GFLr+IJMgIUV9qIxFqB3APg3pXhuNx29REZgBslvGtiKI3SwzG7LY2kAh/IcuJicjwBA7Zbu7m5k2a0nGvKmYja8OOmwxG78azH8ZdNxJsMW8vtEOgNWK4JsuIWgyAgy5dLe7E0BBTzZ/68A658ygog2tbf19gpp1cxMx6PZEd/lrOnKJ+jG+AZKMAMOIPO8KEDTs36WFVgX3BbFVrtSGeb7v9wBanlD3xKjnXqMhj6gz4xsgSwMMo2QfDvoVqwMB7TiZwRuGPKez1iAcc+4CsLL2cmZUBvntp/WpXzbU8ELYH+QSuEks6Rl+BIQbdeRixrXFTOwtc31/KedsACETZE1TIeYPp/IjP9ORKwRC3wBD9wuKo5LLvZsI+J6GVBaIukvrTkhX+8ZSe+wsZnxeRVHHYfx7ort8h5Zcoi6Na4AsDTDUqBO+7VMWwAsa0iW5Uumq5qlyu65EjC18EcB8hXUdUULFXi9LXmYvjP1h3IdTPgzht6jH3UNE79OU7pLSU/FZ76ddsC/+WRD9rsqCXsYW84bUzkNFDblCwwphf5B7gE0omXfvB5DXk41vKubiF870qmI2vhrEV+ioCMyfkyUv1Qv9CBAh/AXF5MjzNgN4UkOqCJjv3X3ZgqkewI7n1sdP03bEFfDz4Uj57zTlEnVOGmCTSvbhoAVtS2NOj46UJ21wvAqRyCjvhIYjrgB47Pvty7rgacgVRqHrD9IAm1iiMPwoAzfoyUbvKuZix917HDrduUHR80smKYGvTveMPK4lVxgRhX4rnDTAJpPyvJvBeEhLMqbPDWajrzvyZTHnXMyMa7XkBj+Qypf/RU8u0ShkEqTJUR8qEaYO6FkaEydY9/VvROvA+nkJMPLQ8xl8bpSil2vIIxqMjADF4aUxoL/RlO7siOvcZo2NFQAs0ZDPZyB3av7AXg25wo3lNBgRUsmC28eE7TpyMXAZgEs05fq0qafXifonI0BxFHtXAvi16TIC9Nhez+s0XURosB+6/iDHYYlXpAs4ZFlWB4AR07UE4JBF3P7avlD8LkIRuQQW4yR2DD9GQKfpOmpFhM2JfFnHQu/mEcIBkpwHKI6TWOF9GkDj3jdjvj+Z93aYLiOEQtcf5B6gOA51wreJcgAabuaUgd0x39louo5wotD1B7kEFpNanHefA9F7TddRJd8Gsgt79+t4Ep4IgYnHYYVunY+Yu1Te/TIR7jFdx6wxPpEoeN83XUZYhbE/yAhQTMtn72oGfmW6jhkxfpgse580XYZoLHIitJhWuoBDNtf50hii/X4EGepDxXQpYRbG/qB+EoSZAo8ptEp0D/8ERNebrmMqDLxvSZf3W9N1NAEVDdBof1DfACl8M0fNKLncvQXAt03XcRxGdzrv3me6DNGYJuwEkWYlJked8K1Ray2A503XcoznYn7sA6aLaBpNsBA6+FkeuQQOjcS9w/1gq16WxjAxXy5LXjQK4UaJCQ0wfJudRbBS3cMPgGH8YFEiui3ZXf6G6TqaTOj6gxyGIKo2HPGuBpGxo+UJ+GXZda8zlV+Ex4RJECVn/sslcMgs64LHvm9qVtgnWLnT+uAayt/MQtcfZCeImBM3Uv4mjFwS0eOJwvCj+vMKhP0SOIwLHYUaLz9a0sAEBA/qzykAqJoEqZ8RIKQBilniwx/cVgOpTzKQU6hjtOdMbIByCSxmZe+66EoAjoHU5+xbh4UG8jY9VjNJKiNA0XgqFeuDhlI7ZT9+o6HcTc0KYX+QE6FF1Uq52NsAGFsQTcybhzKxt5vKL8Jj4jpAuQQW0yquOSHFTNth9tKFfKJtg9l5SYM1NKPQDZBkBChmjTthIVLpBpAyXQuAJGHU+I6UZhLGVSLj1wEqGAGSHLoaGqWn4x8CcLHpOo6id5YyznrTVTQNNZMgRvuD8kkQJkSCjin0G8q0ngfmujtxmQlbSu2xs0zXIeasxWRy9Quh2ewvKGo3mMUJPvm9AKKma5nECWxTF7fBNl1I6Km5RWZ0gKR+HSDV5T8aURXnNgArTVcxjTcWHeda00U0ARUNsH5GgGrOA5QRYCMrZeNtBGwwXcdMCPj4ULb1D0zXEXIqVonUUQNUcpOTpQE2qP5c/HQGN8pMa4tPfm+pDfNMFyKqUkcNUMkQl6QBNiDuhBVh7kIj7b1lnMUx53bTZYQVE40pCBthg2tKdawDlHuADaj0lHM9A282XUfVCGuLGafDdBlhROyPKgm8ytwE1vhZYEvJgahGO7yo3kBH6/kA6vYxmDMi/LMsjQkeEyl5NvSehLnL4HEN0FIxCQLQL9pkIqRRvNCGEy3Lvw+G783UaB5HKM+rZA1qkMiHkgY4v+VEE6cKAZg4AlT0TJCk3bpYRVwRvFHHuQPAMtN11IxxwdBpTqfpMsKESU0DHIFnrD/o2QvcgqVK4opAFTNODkBo7p8xcN1Axllluo6wIKhpgLAorSTubFKP+4p9JafB+FR5g4q4IjjFtbEVIOiaQd0DwNOQx7IIhT25+Ys05Ao9BimZBGGLzlcRdzYmToKomeVh+nBxbWyFktiiZrwRLfCpF8B8DelG2ac2ZlypIRcAnNrCI/doyhVqBF/NCJD5g/3Z6GuUxJ7BuJvE5MNVNF+7DD79opiNfR3AU8TW0LE/ZPL3B/VITiL6RTLv/iCIWM2i6Do3EKBllE5Mf5/qcR8G8PBgznkjMTSc5kLvLGZim1Ld5bvU5wovBo0oWs5xqg3r58Wc82MGniXGiwQeZqIyABBjDEwHjtbhvwSiCgAQjf/ZUf6hibPWzPAjtt+/uGvkV0e+N36WjJQ+azUK0DsBgGnircbg/rOyjzsBSAOcpYGMs4qAa7QkY3wz8Sr3M0e+HHW9zVEnfh7A5yrPTXTLwNroQ0t2jDyhPFdIEWFE4YmAFhgXEHABADDolW0ZDADjesbRfsH8yismoOO+TQD8ivUIjvljP+EeIA/PtXrReHZftuBki1CAnjPZBlGxc9R5dKnVaX1wif13A/yihvxxi+2du9sQ15ArlMinhn8YPU9c+nfsF0QkDbCJREfKXwBwqoZUPgjZ1M5DxYk/SHaXfwO210PHacPMr4868c/M/EIxKeLj/v81Hp66AfqM/9NbjDBlMOu8F6DVOnIR4eZU3vv2VD9PdQ8/wCBNM9C8eTAX/Ss9uUImDA2Qx99vmzgL/DO91QgThjKxlQR8TlO6HyWe9T4+04sOLHQ/AvD/6CiI2Lrn+Vz8FB25woTH6Nema6iZZY3bdzyuAabz7iMAfquzHqHXE22I+oReACdoSLevUkE7fQ8zniJy1haULcKlAA5qqGtxhTnPnfK8mmqker2nATT2KJCnuQQmgAno1luR0GlxPHYTQOfpyMVEm5b2erO+rZLIl58kwvtV1nSMPxl6Ov5RTblCg0FfNF1Djaa+BAYAH9gGQM2CaGFUMedcDKa/1ZKM6c503r2v2rcl894OAAUFFR2HmT8xmI3/oY5cYWFV/C0AKqbrqMHUl8AAkC54z4CxTV89Qof+NfMXA9gBLUte6GfDEfdDc3231eJtBmFXkBVNoYXAvXs7sEBDrlBI9pZ3QdMfKCVommUwR0SYPgkoXRQtNLMjY/eAtRxKcci2K+9Z1jX3vb6JbThg+dalAMoB1jWV5WOWc6eGPKFBtn0dgH2m65gTnkUDXNTj7iGwPGUrJIqZ2CaAtSz9IOD9x241mqtE9/BPGKTrM9hRzDpZTbkaXrLr0CCIrzNdxxxNfw/wiEShvAXAt5SXI5Qa6IieDaJbNKXrSRa8rqCCpQrurQR6MKh4M7ijlIm9SlOuhpdcXv4Cgb5quo45mP4e4BEEMCOS0XQvRiiw60rELMvuBbRs//qN1eJtCjIgATw2FlkP4Lkg405hPoh6eWNDn4StDXXC9+GuIeAR07VUY9qtcBOlCwdLzLgEhH61ZQkVTnwxdrOWgwaAsmVZlya2YZJTOWqzdOeB563Dh7Qqn3lk4PyS59yoOk9YpAs45CPyDgBPmq5ltqiaBggcnhWmMV4FoPFXgTeRUib2VgZdpSMXg65N7Bh+TFX8RMH7PgifVBV/HMZHhrLOH2vJFQLpwsFSZazlIjB+aLqWWaquAQKHp75jldiFYHxTTU0iSIPZeUkm2g4NT+Njoq+lCu6tqvMkXe9GMB5SnQeA5QM7XmjDiRpyhcLSnQeef+kk708B9JiuZRaqb4AAsLB3/75kt/dWBi4H8ELgZYlAMECgyjYA6p+zQOhn215//MlrClL1oRJh6gCwV3UuAGeMOs4WDXlC46wtKKcKXgZEqxnYbbqeacytAQKHb0qnC95WPxJ5NQOfgjTCulPKOO3E/HYNqXyuILdk+8GhmV8ajEU97h4G6zk6C8iWsvE2DXlCJZV3v2x53tlgdAIYMF3PJGY3CzydJdsPDqUL3scY3umHR4T8APRsYhfT2LcOC0HQsuSFgU+ne7z/0JHrWOlC+asM0jI6Y/BdQ5e2yhMNq5Tsw8FUt3dDMu6dQURtTPgigJdM13XY+MMQanpwdLqAQ4C3FcDWXVcitmB/dCX7dKZl0UnscyvBemWLEYMdWFMvxyCQw8w1L9dgK/ibsT74WQLdHXRcANi3b+aTUmZrxI9vADgVVLwpER5OOTMfcaXKgYXuRxe8GHuThkMdFvlRfyOAzkCi+f4gSM3nyC4P191hxnQ3RgH3fgD3P9GG6KJodCUsOpOYTgJxK7H1yn1WtjiK6U4o8rkFRPNqromscTvclN8kF/rsbkM86ji3AnivsiRE+5n599IF7xllOWahlIm9iokeA5Tt4x0D4abkcu8Txx7jL8JFGmAIFTNODoQ7ANT8F3MiJupI593eoOPOxWAu/h5ivldB6CL76DBxiS/0kgYYUkOZ2EqfrPuCXAhNwNZkwbs8qHhBKGadHQByQcUj4Luw7fZk16HBoGKK+iUn4oZUorv862HbvYBBtwUSkLCLWrwPBhIrQAzvCgZqPnwBQAWEGxIrvIul+TUPGQE2gWI2vhrwtwK0cI4hykTWhcn8sJZndlRrsCP6erKs/8bc9zwPweJMakdZFvo3GRkBNoFUwf0SMc4HMKftagT+aL02PwBI94w8TsRzfbj7d8i2z5Hm15ykATaJZHf5Ny8t9C4i8OdRxUJiAj348tFodS2RL98O0FeqeMsoEV2XXOG9RS55m5dcAjehYib2FljUNeMJ0YT+ymjLuUt3HnheU2k12X3ZgpOjIyOPAlg2w0uf9H0rs6RnuKGOchLBkwbYpPatw8IR37kTjDVTvMRnH3/WaEtBipmWc0H2jwC0TvGSAnneFck+2bkkpAE2vZfXDN4OYP6x3yfgpmTBu95QWTUp5pwMeMKDe4j2s49N6W53p6GyRB2Se4BNLtXt5X0b5wD4wTHf/nEi7t1gqqZapfJeN4AvHPmagO9GKnidND8xkYwABQCA22CX4rH3gekK38Y7lnR5vzVdUy2eWQenteJ8B6AHkivcf5LtbEKIpsKdcoUjhBBCCCGEONb/A9+smaQv0rWfAAAAAElFTkSuQmCC" alt="LIXIL" style="height:44px;width:auto;object-fit:contain;">
+    <div>
+      <span>LIXIL</span>
+      <small>Reports Auto</small>
+    </div>
+  </div>
+  <div class="section-label">CSAT Report</div>
+  <div class="nav-item active" onclick="selectReport('csat')" id="nav-csat">
+    <span class="num">▧</span>
+    <span>CSAT Report</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_1')" id="nav-1_1">
+    <span class="num">1.1</span>
+    <span>รายงานจำนวนสายที่เข้ามาในคิว (CSQ Day)</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_2')" id="nav-1_2">
+    <span class="num">1.2</span>
+    <span>รายงานจำนวนสายเข้าเฉลี่ยรายชั่วโมง</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_3')" id="nav-1_3">
+    <span class="num">1.3</span>
+    <span>สถานะเอเจนต์รายวัน</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_4')" id="nav-1_4">
+    <span class="num">1.4</span>
+    <span>สรุปสถานะรวมของเอเจนต์ทุกคน</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_5')" id="nav-1_5">
+    <span class="num">1.5</span>
+    <span>สถานะเอเจนต์ YTD</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_6')" id="nav-1_6">
+    <span class="num">1.6</span>
+    <span>Not Ready Count</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_7')" id="nav-1_7">
+    <span class="num">1.7</span>
+    <span>Login / Logout</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_8')" id="nav-1_8">
+    <span class="num">1.8</span>
+    <span>Audio Text - การบำรุงรักษา</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_9')" id="nav-1_9">
+    <span class="num">1.9</span>
+    <span>Audio Text - ปัญหาและการแก้ไข</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_10')" id="nav-1_10">
+    <span class="num">1.10</span>
+    <span>Voicemail</span>
+  </div>
+  <div class="nav-item" onclick="selectReport('1_11')" id="nav-1_11">
+    <span class="num">1.11</span>
+    <span>Reserved/Talking Ratio</span>
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <div id="topbar">
+    <h1 id="topbar-title">CSAT Report</h1>
+  </div>
+
+  <div id="content">
+    <div class="content-actions">
+      <button class="btn-lixil" onclick="triggerUpload()" id="btn-import">↑ Import Data</button>
+      <button class="btn-excel" onclick="exportExcel()" id="btn-excel" disabled>↓ Export Data</button>
+      <button class="btn-navy" onclick="clearData()" id="btn-clear" disabled>⌫ Clear Data</button>
+    </div>
+    <!-- Empty state -->
+    <div id="empty-state" style="display:none">
+      <div class="big-icon">&#128194;</div>
+      <p>กดปุ่ม <strong>Import Data</strong> เพื่อนำเข้าไฟล์รายงานจาก Cisco</p>
+      <p style="margin-top:8px;font-size:12px">รองรับไฟล์ .xls, .xlsx, .csv</p>
+    </div>
+
+    <!-- Report content (hidden until data loaded) -->
+    <div id="report-content" style="display:block">
+
+      <!-- Stat cards -->
+      <div id="stat-cards" class="csat-summary" style="display:block">
+        <div class="csat-tab-title">CSAT Report</div>
+        <div class="csat-metric-row csat-row-top">
+          <div class="csat-metric-card">
+            <div class="csat-label strong">Total Calls:</div>
+            <input class="csat-total-input" type="number" min="0" value="0" onchange="recalcCsat(this.value)" onblur="recalcCsat(this.value)">
+          </div>
+          <div class="csat-metric-card"><div class="csat-label">Total Calls Survey</div><div class="csat-value" style="color:#2f6fff">0</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Point 0</div><div class="csat-value" style="color:#666">0</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Point 1 - 6</div><div class="csat-value" style="color:#ff0000">0</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Point 7 - 8</div><div class="csat-value" style="color:#ff8a00">0</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Point 9 - 10</div><div class="csat-value" style="color:#52c41a">0</div></div>
+        </div>
+        <div class="csat-metric-row csat-row-bottom">
+          <div class="csat-metric-card"><div class="csat-label">Total Calls Survey (%)</div><div class="csat-value" style="color:#2f6fff">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Total % of Promoters</div><div class="csat-value" style="color:#2f6fff">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Total % of Detractors</div><div class="csat-value" style="color:#666">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Net Promoter Score</div><div class="csat-value" style="color:#ff0000">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Response Rate</div><div class="csat-value" style="color:#ff8a00">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Total Call Response Rate</div><div class="csat-value" style="color:#ff8a00">0.00</div></div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div id="charts-section" class="card-box" style="display:none">
+        <h5 id="chart-title">กราฟ</h5>
+        <div id="main-chart-wrap" class="chart-wrapper">
+          <canvas id="mainChart"></canvas>
+        </div>
+        <div id="secondary-charts" style="margin-top:16px;display:none"></div>
+      </div>
+
+      <!-- Pie charts (for 1.4) -->
+      <div id="pie-section" style="display:none" class="card-box">
+        <h5>กราฟวงกลมรายเอเจนต์</h5>
+        <div class="pie-grid" id="pie-grid"></div>
+      </div>
+
+      <!-- Table -->
+      <div class="card-box" id="table-section">
+        <h5>ตารางข้อมูล</h5>
+        <div class="table-scroll">
+          <table class="data-table" id="data-table">
+            <thead id="table-head"><tr><th>Node ID - Session ID - Sequence No</th><th>Time</th><th>Application Name</th><th>Agent Name</th><th>Agent Extension</th><th>Calling Number</th><th>Score</th></tr></thead>
+            <tbody id="table-body"><tr class="csat-no-data"><td colspan="7"><div class="csat-empty-box"><div class="csat-empty-icon">□</div><div>No data</div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="file-input" accept=".xls,.xlsx,.csv" style="display:none" onchange="handleFile(this)">
+
+<!-- Spinner -->
+<div id="spinner"><div class="spinner-box"><div class="spin"></div><p id="spinner-text">กำลังประมวลผล...</p></div></div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ==================== State ====================
+let currentReport = 'csat';
+let currentData   = null;
+let charts        = {};
+
+const REPORT_META = {
+  'csat': {title:'CSAT Report', file:'CSAT Survey (.xlsx)'},
+  '1_1': {title:'1.1 รายงานจำนวนสายที่เข้ามาในคิวของคอนแทคเซ็นเตอร์', file:'CSQ Day (.xls)'},
+  '1_2': {title:'1.2 รายงานจำนวนสายเข้าเฉลี่ยรายชั่วโมง', file:'CSQ Hour (.xls)'},
+  '1_3': {title:'1.3 รายงานสถานะเอเจนต์รายวัน', file:'Agent-All States-DAY (.xls)'},
+  '1_4': {title:'1.4 รายงานสรุปสถานะรวมของเอเจนต์ทุกคน', file:'All Agents-All States-Month (.xls)'},
+  '1_5': {title:'1.5 สรุปข้อมูลสถานะเอเจนต์ตั้งแต่ต้นปี (YTD)', file:'Agent-All States-YTD (.xls)'},
+  '1_6': {title:'1.6 รายงาน Not Ready Count แบ่งตามโค้ด', file:'Agent-Not Ready Count (.xls)'},
+  '1_7': {title:'1.7 รายงาน Login/Logout ของเอเจนต์', file:'Agent-Login Logout-DAY (.xls)'},
+  '1_8': {title:'1.8 จำนวนครั้งที่ลูกค้ากดฟัง Audio Text การบำรุงรักษา', file:'Audio Text-Maintenance (.xls)'},
+  '1_9': {title:'1.9 จำนวนครั้งที่ลูกค้ากดฟัง Audio Text ปัญหาและการแก้ไข', file:'Audio Text-Problem (.xls)'},
+  '1_10': {title:'1.10 รายงานการฝากข้อความเสียงจากลูกค้า (Voicemail)', file:'Voicemail CSV จาก CAR'},
+  '1_11': {title:'1.11 อัตราส่วน Reserved/Talking Ratio', file:'Reserved-Talking Ratio (.xls)'},
+};
+
+const CHART_COLORS = {
+  presented:'#2196F3', handled:'#F15A22', abandoned:'#FFC107',
+  'Not Ready':'#e74c3c','Ready':'#2ecc71','Reserved':'#9b59b6',
+  'Talking':'#F15A22','Talk':'#F15A22','Work':'#3498db',
+  'Not Ready%':'#e74c3c','Ready%':'#2ecc71','Reserved%':'#9b59b6',
+  'Talking%':'#F15A22','Talk%':'#F15A22','Work%':'#3498db',
+};
+const PIE_COLORS = ['#F15A22','#2196F3','#FFC107','#27ae60','#9b59b6','#e74c3c','#1abc9c','#f39c12'];
+
+
+function makeEmptyCsatData() {
+  return {
+    report: 'csat',
+    title: 'CSAT Report',
+    metrics: {
+      totalCalls: 0,
+      totalCallsSurvey: 0,
+      point0: 0,
+      point1_6: 0,
+      point7_8: 0,
+      point9_10: 0,
+      totalCallsSurveyPercentage: 0,
+      totalPercentageOfPromoters: 0,
+      totalPercentageOfDetractors: 0,
+      netPromoterScore: 0,
+      responseRate: 0,
+      totalCallResponseRate: 0,
+    },
+    columns: ['Node ID - Session ID - Sequence No', 'Time', 'Application Name', 'Agent Name', 'Agent Extension', 'Calling Number', 'Score'],
+    table: [],
+  };
+}
+
+function makeEmptyNotReadyCountData() {
+  const monthlyColumns = ['Date', 'Service Customers', 'Lunch', 'Meeting', 'Break', 'Inbound From Agent', 'Total'];
+  const ytdColumns = ['Reason', 'Month'];
+  return {
+    report: '1_6',
+    title: '1.6 Not Ready Count',
+    agent_name: 'Agent',
+    report_month: '',
+    monthly_columns: monthlyColumns,
+    monthly_table: [],
+    ytd_columns: ytdColumns,
+    ytd_table: [
+      {'Reason': '%Service Customers', 'Month': ''},
+      {'Reason': '%Lunch', 'Month': ''},
+      {'Reason': '%Meeting', 'Month': ''},
+      {'Reason': '%Break', 'Month': ''},
+    ],
+    chart_labels: ['Month'],
+    chart_datasets: [
+      {label: '%Service Customers', data: [0]},
+      {label: '%Lunch', data: [0]},
+      {label: '%Meeting', data: [0]},
+      {label: '%Break', data: [0]},
+    ],
+    table: [],
+    columns: monthlyColumns,
+    isMock: true,
+  };
+}
+
+function makeEmptyReportData(reportId) {
+  const emptyLabel = ['No data'];
+  const stateCols = ['Not Ready', 'Ready', 'Reserved', 'Talking', 'Work'];
+  const statePctCols = ['%Not Ready', '%Ready', '%Reserved', '%Talking', '%Work'];
+  const emptyStates = Object.fromEntries(stateCols.map(c => [c, [0]]));
+  const emptyStatePcts = Object.fromEntries(statePctCols.map(c => [c, [0]]));
+
+  if (reportId === '1_1') {
+    const columns = ['Time', 'Presented', 'Handled', 'Handled%', 'Abandoned', 'Abandoned%'];
+    return {
+      report: '1_1',
+      title: REPORT_META['1_1'].title,
+      labels: emptyLabel,
+      datasets: {presented: [0], handled: [0], abandoned: [0], handled_pct: [0], abandoned_pct: [0]},
+      totals: {presented: 0, handled: 0, abandoned: 0, handled_pct: 0, abandoned_pct: 0},
+      table: [],
+      columns,
+      isMock: true,
+    };
+  }
+
+  if (reportId === '1_2') {
+    const columns = ['Time', 'Presented', 'Handled', 'Abandoned'];
+    return {
+      report: '1_2',
+      title: REPORT_META['1_2'].title,
+      labels: emptyLabel,
+      datasets: {presented: [0], handled: [0], abandoned: [0]},
+      table: [],
+      columns,
+      isMock: true,
+    };
+  }
+
+  if (reportId === '1_3') {
+    const columns = ['Date', 'Not Ready Dur', '%Not Ready', 'Ready Dur', '%Ready', 'Reserved Dur', '%Reserved', 'Talk Dur', '%Talking', 'Work Dur', '%Work', 'Day Total'];
+    return {
+      report: '1_3',
+      title: REPORT_META['1_3'].title,
+      labels: emptyLabel,
+      state_cols: statePctCols,
+      datasets: emptyStatePcts,
+      table: [],
+      columns,
+      isMock: true,
+    };
+  }
+
+  if (reportId === '1_4') {
+    const columns = ['Agent', 'Not Ready', 'Ready', 'Reserved', 'Talking', 'Work', 'Total Login'];
+    return {
+      report: '1_4',
+      title: REPORT_META['1_4'].title,
+      labels: emptyLabel,
+      agents: emptyLabel,
+      state_cols: stateCols,
+      totals: {},
+      datasets: emptyStates,
+      pie_data: [],
+      table: [],
+      columns,
+      isMock: true,
+    };
+  }
+
+  if (reportId === '1_5') {
+    const columns = ['Month', ...statePctCols];
+    return {
+      report: '1_5',
+      title: REPORT_META['1_5'].title,
+      labels: emptyLabel,
+      state_cols: statePctCols,
+      datasets: emptyStatePcts,
+      totals: {},
+      table: [],
+      columns,
+      isMock: true,
+    };
+  }
+
+  if (reportId === '1_7') {
+    const columns = ['Login Date', 'Login Time', 'Logout Time', 'Logout Reason', 'Duration'];
+    return {
+      report: '1_7',
+      title: REPORT_META['1_7'].title,
+      labels: emptyLabel,
+      datasets: {reason_labels: [], reason_counts: [], durations: []},
+      table: [],
+      columns,
+      isMock: true,
+    };
+  }
+
+  if (reportId === '1_8') {
+    const columns = ['Topic', 'Count', '%'];
+    return {
+      report: '1_8',
+      title: REPORT_META['1_8'].title,
+      labels: emptyLabel,
+      datasets: {counts: [0]},
+      total: 0,
+      table: [],
+      columns,
+      isMock: true,
+    };
+  }
+
+  if (reportId === '1_9') {
+    const columns = ['Problem', 'Count', '%'];
+    return {
+      report: '1_9',
+      title: REPORT_META['1_9'].title,
+      labels: emptyLabel,
+      datasets: {counts: [0]},
+      total: 0,
+      table: [],
+      columns,
+      isMock: true,
+    };
+  }
+
+  if (reportId === '1_11') {
+    const columns = ['Agent', 'จำนวนครั้งที่สายเข้าจากคิว', 'จำนวนครั้งที่รับสายจากคิว', '% รับสาย'];
+    return {
+      report: '1_11',
+      title: REPORT_META['1_11'].title,
+      labels: emptyLabel,
+      datasets: {reserved: [0], talking: [0], pct: [0]},
+      totals: {reserved: 0, talking: 0, pct: 0},
+      table: [],
+      columns,
+      isMock: true,
+    };
+  }
+
+  return null;
+}
+
+function resetCsatReport() {
+  currentData = makeEmptyCsatData();
+  destroyCharts();
+  render_csat(currentData);
+  enableButtons(false);
+}
+
+function resetNotReadyCountReport() {
+  currentData = makeEmptyNotReadyCountData();
+  render_1_6(currentData);
+  enableButtons(false);
+}
+
+function resetMockReport(reportId) {
+  const mockData = makeEmptyReportData(reportId);
+  if (!mockData) return false;
+  currentData = mockData;
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('report-content').style.display = 'block';
+  document.getElementById('charts-section').style.display = 'block';
+  document.getElementById('main-chart-wrap').style.maxWidth = '';
+  document.getElementById('secondary-charts').style.display = 'none';
+  document.getElementById('secondary-charts').innerHTML = '';
+  document.getElementById('pie-section').style.display = 'none';
+  document.getElementById('table-section').style.display = 'block';
+  renderReport(mockData);
+  enableButtons(false);
+  return true;
+}
+
+// ==================== Navigation ====================
+function selectReport(id) {
+  currentReport = id;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('nav-' + id).classList.add('active');
+  document.getElementById('topbar-title').textContent = REPORT_META[id].title;
+  document.getElementById('btn-import').textContent = 'Import Data';
+  clearData();
+}
+
+// ==================== File Upload ====================
+function triggerUpload() {
+  document.getElementById('file-input').click();
+}
+
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  showSpinner('กำลังประมวลผล ' + file.name + ' ...');
+  fetch('/api/process/' + currentReport, {method:'POST', body: fd})
+    .then(r => r.json())
+    .then(res => {
+      hideSpinner();
+      if (res.success) {
+        currentData = res.data;
+        renderReport(res.data);
+        enableButtons(true);
+        showToast('นำเข้าข้อมูลสำเร็จ', 'success');
+      } else {
+        showToast('Error: ' + res.error, 'error');
+        console.error(res.trace);
+      }
+    })
+    .catch(err => { hideSpinner(); showToast(String(err), 'error'); });
+  input.value = '';
+}
+
+// Drag & Drop on empty state
+const emptyState = document.getElementById('empty-state');
+emptyState.addEventListener('dragover', e => { e.preventDefault(); emptyState.style.background='#fff6f2'; });
+emptyState.addEventListener('dragleave', () => { emptyState.style.background=''; });
+emptyState.addEventListener('drop', e => {
+  e.preventDefault();
+  emptyState.style.background = '';
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    showSpinner('กำลังประมวลผล...');
+    fetch('/api/process/' + currentReport, {method:'POST', body: fd})
+      .then(r => r.json())
+      .then(res => {
+        hideSpinner();
+        if (res.success) { currentData = res.data; renderReport(res.data); enableButtons(true); showToast('สำเร็จ', 'success'); }
+        else { showToast('Error: ' + res.error, 'error'); }
+      }).catch(err => { hideSpinner(); showToast(String(err), 'error'); });
+  }
+});
+
+// ==================== Render ====================
+function renderReport(data) {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('report-content').style.display = 'block';
+  destroyCharts();
+
+  const id = data.report;
+  if (id === 'csat') { render_csat(data); return; }
+  if (id === '1_1') render_1_1(data);
+  else if (id === '1_2') render_bar(data, 'กราฟสายเข้าเฉลี่ยรายชั่วโมง', false);
+  else if (id === '1_3') render_stacked(data);
+  else if (id === '1_4') render_1_4(data);
+  else if (id === '1_5') render_line_multi(data);
+  else if (id === '1_6') { render_1_6(data); return; }
+  else if (id === '1_7') render_table_only(data);
+  else if (id === '1_8' || id === '1_9') render_pie_single(data);
+  else if (id === '1_10') render_bar_single(data, 'จำนวน Voicemail');
+  else if (id === '1_11') render_bar_double(data);
+  renderTable(data);
+}
+
+
+
+// ---- CSAT Report ----
+function fmtNumber(value, digits = 0) {
+  const n = Number(value || 0);
+  return n.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
+function recalcCsat(totalCalls) {
+  if (!currentData || currentData.report !== 'csat') return;
+  const rows = currentData.table || [];
+  const scores = rows.map(row => parseInt(row.Score, 10) || 0);
+  const totalSurvey = scores.length;
+  const point0 = scores.filter(s => s === 0).length;
+  const point1_6 = scores.filter(s => s >= 1 && s <= 6).length;
+  const point7_8 = scores.filter(s => s >= 7 && s <= 8).length;
+  const point9_10 = scores.filter(s => s >= 9 && s <= 10).length;
+  const answered = totalSurvey - point0;
+  const calls = Math.max(parseInt(totalCalls, 10) || 0, 0);
+  const promoters = answered ? (point9_10 * 100 / answered) : 0;
+  const detractors = answered ? (point1_6 * 100 / answered) : 0;
+  currentData.metrics = {
+    totalCalls: calls,
+    totalCallsSurvey: totalSurvey,
+    point0,
+    point1_6,
+    point7_8,
+    point9_10,
+    totalCallsSurveyPercentage: calls ? (totalSurvey * 100 / calls) : 0,
+    totalPercentageOfPromoters: promoters,
+    totalPercentageOfDetractors: detractors,
+    netPromoterScore: promoters - detractors,
+    responseRate: totalSurvey ? (answered * 100 / totalSurvey) : 0,
+    totalCallResponseRate: calls ? ((point1_6 + point7_8 + point9_10) * 100 / calls) : 0,
+  };
+  render_csat(currentData);
+}
+
+function metricCard(label, value, color) {
+  return `<div class="csat-metric-card">
+    <div class="csat-label">${label}</div>
+    <div class="csat-value" style="color:${color}">${value}</div>
+  </div>`;
+}
+
+function render_csat(data) {
+  const metrics = data.metrics || {};
+  document.getElementById('charts-section').style.display = 'none';
+  document.getElementById('secondary-charts').style.display = 'none';
+  document.getElementById('pie-section').style.display = 'none';
+  document.getElementById('table-section').style.display = 'block';
+
+  const sc = document.getElementById('stat-cards');
+  sc.style.display = 'block';
+  sc.className = 'csat-summary';
+  sc.innerHTML = `
+    <div class="csat-tab-title">CSAT Report</div>
+    <div class="csat-metric-row csat-row-top">
+      <div class="csat-metric-card">
+        <div class="csat-label strong">Total Calls:</div>
+        <input class="csat-total-input" type="number" min="0" value="${metrics.totalCalls || 0}" onchange="recalcCsat(this.value)" onblur="recalcCsat(this.value)">
+      </div>
+      ${metricCard('Total Calls Survey', fmtNumber(metrics.totalCallsSurvey), '#2f6fff')}
+      ${metricCard('Point 0', fmtNumber(metrics.point0), '#666')}
+      ${metricCard('Point 1 - 6', fmtNumber(metrics.point1_6), '#ff0000')}
+      ${metricCard('Point 7 - 8', fmtNumber(metrics.point7_8), '#ff8a00')}
+      ${metricCard('Point 9 - 10', fmtNumber(metrics.point9_10), '#52c41a')}
+    </div>
+    <div class="csat-metric-row csat-row-bottom">
+      ${metricCard('Total Calls Survey (%)', fmtNumber(metrics.totalCallsSurveyPercentage, 2), '#2f6fff')}
+      ${metricCard('Total % of Promoters', fmtNumber(metrics.totalPercentageOfPromoters, 2), '#2f6fff')}
+      ${metricCard('Total % of Detractors', fmtNumber(metrics.totalPercentageOfDetractors, 2), '#666')}
+      ${metricCard('Net Promoter Score', fmtNumber(metrics.netPromoterScore, 2), '#ff0000')}
+      ${metricCard('Response Rate', fmtNumber(metrics.responseRate, 2), '#ff8a00')}
+      ${metricCard('Total Call Response Rate', fmtNumber(metrics.totalCallResponseRate, 2), '#ff8a00')}
+    </div>
+  `;
+  renderTable(data);
+}
+
+// ---- 1.1 ----
+function render_1_1(data) {
+  document.getElementById('stat-cards').className = 'stat-grid';
+  document.getElementById('stat-cards').style.display = 'grid';
+  const t = data.totals || {};
+  document.getElementById('stat-cards').innerHTML = `
+    <div class="stat-card"><div class="val">${t.presented||0}</div><div class="lbl">Presented</div></div>
+    <div class="stat-card"><div class="val">${t.handled||0}</div><div class="lbl">Handled</div></div>
+    <div class="stat-card" style="--orange:#FFC107"><div class="val" style="color:#FFC107">${t.abandoned||0}</div><div class="lbl">Abandoned</div></div>
+    <div class="stat-card"><div class="val">${(t.handled_pct||0).toFixed(1)}%</div><div class="lbl">Handled%</div></div>
+    <div class="stat-card"><div class="val" style="color:#FFC107">${(t.abandoned_pct||0).toFixed(1)}%</div><div class="lbl">Abandoned%</div></div>
+  `;
+  document.getElementById('chart-title').textContent = 'กราฟจำนวนสายเข้าคิวรายวัน';
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  charts['main'] = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: data.labels,
+      datasets:[
+        {label:'Presented', data: data.datasets.presented, backgroundColor:'rgba(33,150,243,0.7)', borderColor:'#2196F3', borderWidth:1},
+        {label:'Handled',   data: data.datasets.handled,   backgroundColor:'rgba(241,90,34,0.7)',  borderColor:'#F15A22', borderWidth:1},
+        {label:'Abandoned', data: data.datasets.abandoned, backgroundColor:'rgba(255,193,7,0.7)',  borderColor:'#FFC107', borderWidth:1},
+      ]
+    },
+    options: chartOptions('Date','Number of Calls', false)
+  });
+
+  // Secondary: line chart %
+  const sec = document.getElementById('secondary-charts');
+  sec.style.display = 'block';
+  sec.innerHTML = '<div class="chart-wrapper"><canvas id="secChart"></canvas></div>';
+  const ctx2 = document.getElementById('secChart').getContext('2d');
+  charts['sec'] = new Chart(ctx2, {
+    type:'line',
+    data:{
+      labels: data.labels,
+      datasets:[
+        {label:'Handled%',  data: data.datasets.handled_pct,  borderColor:'#F15A22', backgroundColor:'rgba(241,90,34,0.08)', tension:0.3, fill:true, pointRadius:4},
+        {label:'Abandoned%',data: data.datasets.abandoned_pct,borderColor:'#FFC107', backgroundColor:'rgba(255,193,7,0.08)',  tension:0.3, fill:true, pointRadius:4},
+      ]
+    },
+    options: chartOptions('Date','Percent (%)', false)
+  });
+}
+
+// ---- Bar with multiple datasets ----
+function render_bar(data, title, stacked) {
+  document.getElementById('stat-cards').style.display = 'none';
+  document.getElementById('chart-title').textContent = title;
+  const ds = data.datasets;
+  const datasets = [];
+  if (ds.presented) datasets.push({label:'Presented', data:ds.presented, backgroundColor:'rgba(33,150,243,0.7)', borderColor:'#2196F3', borderWidth:1});
+  if (ds.handled)   datasets.push({label:'Handled',   data:ds.handled,   backgroundColor:'rgba(241,90,34,0.7)',  borderColor:'#F15A22', borderWidth:1});
+  if (ds.abandoned) datasets.push({label:'Abandoned', data:ds.abandoned, backgroundColor:'rgba(255,193,7,0.7)',  borderColor:'#FFC107', borderWidth:1});
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  const opts = chartOptions('Time','Average Calls', stacked);
+  charts['main'] = new Chart(ctx, {type:'bar', data:{labels:data.labels, datasets}, options: opts});
+}
+
+// ---- Stacked bar (1.3 Agent States Day) ----
+function render_stacked(data) {
+  document.getElementById('stat-cards').style.display = 'none';
+  document.getElementById('chart-title').textContent = data.title;
+  const datasets = (data.state_cols || []).map((col, i) => ({
+    label: col,
+    data: data.datasets[col] || [],
+    backgroundColor: CHART_COLORS[col] || PIE_COLORS[i % PIE_COLORS.length],
+  }));
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  const opts = chartOptions('Date','Duration', true);
+  charts['main'] = new Chart(ctx, {type:'bar', data:{labels:data.labels, datasets}, options: opts});
+}
+
+// ---- 1.4 All Agents ----
+function render_1_4(data) {
+  document.getElementById('stat-cards').style.display = 'none';
+  document.getElementById('chart-title').textContent = 'Agent States Summary';
+  const datasets = (data.state_cols || []).map((col, i) => ({
+    label: col,
+    data: data.datasets[col] || [],
+    backgroundColor: CHART_COLORS[col] || PIE_COLORS[i % PIE_COLORS.length],
+  }));
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  charts['main'] = new Chart(ctx, {type:'bar', data:{labels:data.agents||data.labels, datasets}, options: chartOptions('Agent','Hours', false)});
+
+  // Pie charts per agent
+  const pieSection = document.getElementById('pie-section');
+  pieSection.style.display = 'block';
+  const grid = document.getElementById('pie-grid');
+  grid.innerHTML = '';
+  (data.pie_data || []).forEach((agent, i) => {
+    const div = document.createElement('div');
+    div.className = 'pie-item';
+    div.innerHTML = `<h6>${agent.agent}</h6><div class="chart-wrapper"><canvas id="pie-${i}"></canvas></div>`;
+    grid.appendChild(div);
+    setTimeout(() => {
+      const ctx = document.getElementById(`pie-${i}`).getContext('2d');
+      charts[`pie-${i}`] = new Chart(ctx, {
+        type:'pie',
+        data:{
+          labels: agent.slices.map(s => s.label),
+          datasets:[{data: agent.slices.map(s => s.value), backgroundColor: PIE_COLORS, borderWidth:1}]
+        },
+        options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{font:{size:10}}}}}
+      });
+    }, 50);
+  });
+}
+
+// ---- Line multi (1.5 YTD) ----
+function render_line_multi(data) {
+  document.getElementById('stat-cards').style.display = 'none';
+  document.getElementById('chart-title').textContent = data.title;
+  const datasets = (data.state_cols || []).map((col, i) => ({
+    label: col,
+    data: data.datasets[col] || [],
+    borderColor: CHART_COLORS[col] || PIE_COLORS[i % PIE_COLORS.length],
+    backgroundColor: 'transparent',
+    tension: 0.3,
+    pointRadius: 5,
+  }));
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  charts['main'] = new Chart(ctx, {type:'line', data:{labels:data.labels, datasets}, options: chartOptions('Month','%', false)});
+}
+
+// ---- 1.6 Not Ready Count ----
+function render_1_6(data) {
+  document.getElementById('stat-cards').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('report-content').style.display = 'block';
+  destroyCharts();
+
+  const agent = data.agent_name || 'Agent';
+  const month = data.report_month || '';
+
+  // ---- Monthly Table ---- ----
+  const monthlyCols = data.monthly_columns || [];
+  const monthlyRows = data.monthly_table || [];
+  const reasonCount = monthlyCols.length - 1; // Exclude Date column
+
+  let monthHtml = `
+    <div class="card-box" style="margin-bottom:20px">
+      <h5 style="color:#1F4E79">&#x1F4CA; ${agent} Not Ready Count: ${month}</h5>
+      <div class="table-scroll">
+        <table class="data-table" id="monthly-table">
+          <thead><tr>`;
+  monthlyCols.forEach(c => {
+    monthHtml += `<th style="background:#1F4E79;color:#fff">${c}</th>`;
+  });
+  monthHtml += `</tr></thead><tbody>`;
+  monthlyRows.forEach((row, idx) => {
+    const isTotal = row['Date'] === 'Total';
+    const rowStyle = isTotal
+      ? 'background:#BDD7EE;font-weight:700;color:#1F4E79'
+      : (idx % 2 === 0 ? 'background:#f5f5f5' : '');
+    monthHtml += `<tr style="${rowStyle}">`;
+    monthlyCols.forEach(c => {
+      const v = row[c] !== null && row[c] !== undefined ? row[c] : '-';
+      monthHtml += `<td>${v}</td>`;
+    });
+    monthHtml += '</tr>';
+  });
+  if (!monthlyRows.length) {
+    monthHtml += `<tr class="csat-no-data"><td colspan="${Math.max(monthlyCols.length, 1)}"><div class="csat-empty-box"><div class="csat-empty-icon">□</div><div>No data</div></div></td></tr>`;
+  }
+  monthHtml += '</tbody></table></div></div>';
+
+  // ---- YTD % Table ----
+  const ytdCols = data.ytd_columns || [];
+  const ytdRows = data.ytd_table || [];
+  let ytdHtml = `
+    <div class="card-box" style="margin-bottom:20px">
+      <h5 style="color:#1F4E79">&#x1F4C5; ${agent} : Not Ready Reasons YTD (%)</h5>
+      <div class="table-scroll">
+        <table class="data-table" id="ytd-table">
+          <thead><tr>`;
+  ytdCols.forEach(c => {
+    ytdHtml += `<th style="background:#1F4E79;color:#fff">${c}</th>`;
+  });
+  ytdHtml += '</tr></thead><tbody>';
+  ytdRows.forEach((row, idx) => {
+    const rowStyle = idx % 2 === 0 ? 'background:#f5f5f5' : '';
+    ytdHtml += `<tr style="${rowStyle}">`;
+    ytdCols.forEach(c => {
+      const v = row[c] !== null && row[c] !== undefined ? row[c] : '-';
+      const display = (c !== 'Reason' && v !== '-' && v !== '') ? v + '%' : v;
+      ytdHtml += `<td>${display}</td>`;
+    });
+    ytdHtml += '</tr>';
+  });
+  if (!ytdRows.length) {
+    ytdHtml += `<tr class="csat-no-data"><td colspan="${Math.max(ytdCols.length, 1)}"><div class="csat-empty-box"><div class="csat-empty-icon">□</div><div>No data</div></div></td></tr>`;
+  }
+  ytdHtml += '</tbody></table></div></div>';
+
+  // Inject monthly and YTD tables into the stat-cards area
+  const sc = document.getElementById('stat-cards');
+  sc.style.display = 'block';
+  sc.innerHTML = monthHtml + ytdHtml;
+
+  // ---- YTD Bar Chart ----
+  document.getElementById('charts-section').style.display = 'block';
+  document.getElementById('chart-title').textContent =
+    `${agent} : Not Ready Reasons YTD (%)`;
+
+  const chartLabels  = data.chart_labels || [];
+  const chartDatasets = (data.chart_datasets || []).map((ds, i) => ({
+    label: ds.label,
+    data: ds.data,
+    backgroundColor: PIE_COLORS[i % PIE_COLORS.length] + 'BB',
+    borderColor:     PIE_COLORS[i % PIE_COLORS.length],
+    borderWidth: 1,
+  }));
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  charts['main'] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: chartLabels, datasets: chartDatasets },
+    options: chartOptions('Month', 'Percent (%)', false),
+  });
+
+  // Hide secondary charts and the default table section
+  document.getElementById('secondary-charts').style.display = 'none';
+  document.getElementById('pie-section').style.display = 'none';
+  document.getElementById('table-section').style.display = 'none';
+}
+
+// ---- Bar single (1.10 Voicemail) ----
+function render_bar_single(data, title) {
+  document.getElementById('stat-cards').style.display = 'none';
+  document.getElementById('chart-title').textContent = title;
+  const counts = data.datasets.counts || [];
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  charts['main'] = new Chart(ctx, {
+    type:'bar',
+    data:{labels:data.labels, datasets:[{label:'Count', data:counts, backgroundColor:'rgba(241,90,34,0.75)', borderColor:'#F15A22', borderWidth:1}]},
+    options: chartOptions('','Count', false)
+  });
+}
+
+// ---- Pie single (1.8, 1.9 Audio Text) ----
+function render_pie_single(data) {
+  document.getElementById('stat-cards').style.display = 'flex';
+  document.getElementById('stat-cards').innerHTML = `
+    <div class="stat-card"><div class="val">${data.total||0}</div><div class="lbl">ครั้งทั้งหมด</div></div>
+  `;
+  document.getElementById('chart-title').textContent = data.title;
+  document.getElementById('main-chart-wrap').style.maxWidth = '400px';
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  charts['main'] = new Chart(ctx, {
+    type:'pie',
+    data:{labels:data.labels, datasets:[{data:data.datasets.counts||[], backgroundColor:PIE_COLORS, borderWidth:1}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right'},datalabels:{display:false}}}
+  });
+}
+
+// ---- Table only (1.7 Login/Logout) ----
+function render_table_only(data) {
+  document.getElementById('stat-cards').style.display = 'none';
+  document.getElementById('charts-section').style.display = 'none';
+  document.getElementById('secondary-charts').style.display = 'none';
+}
+
+// ---- Bar double (1.11 Reserved/Talking) ----
+function render_bar_double(data) {
+  document.getElementById('stat-cards').style.display = 'none';
+  document.getElementById('chart-title').textContent = data.title;
+  const datasets = [];
+  if (data.datasets.reserved && data.datasets.reserved.length)
+    datasets.push({label:'Reserved', data:data.datasets.reserved, backgroundColor:'rgba(155,89,182,0.7)', borderColor:'#9b59b6', borderWidth:1});
+  if (data.datasets.talking && data.datasets.talking.length)
+    datasets.push({label:'Talking',  data:data.datasets.talking,  backgroundColor:'rgba(241,90,34,0.7)',  borderColor:'#F15A22', borderWidth:1});
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  charts['main'] = new Chart(ctx, {type:'bar', data:{labels:data.labels, datasets}, options: chartOptions('','Count', false)});
+}
+
+// ==================== Table ====================
+function renderTable(data) {
+  const cols = data.columns || [];
+  const rows = data.table || [];
+  const thead = document.getElementById('table-head');
+  const tbody = document.getElementById('table-body');
+
+  thead.innerHTML = '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+  if (!rows.length) {
+    const colspan = Math.max(cols.length, 1);
+    tbody.innerHTML = `<tr class="csat-no-data"><td colspan="${colspan}"><div class="csat-empty-box"><div class="csat-empty-icon">□</div><div>No data</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(row =>
+    '<tr>' + cols.map(c => `<td>${row[c] !== null && row[c] !== undefined ? row[c] : '-'}</td>`).join('') + '</tr>'
+  ).join('');
+
+  // Totals row for 1.1
+  if (data.report === '1_1' && data.totals) {
+    const t = data.totals;
+    const totalCells = cols.map(c => {
+      if (c === 'Time' || c === cols[0]) return '<td>รวม</td>';
+      const map = {Presented:'presented', Handled:'handled', 'Handled%':'handled_pct', Abandoned:'abandoned', 'Abandoned%':'abandoned_pct'};
+      const v = map[c] ? t[map[c]] : '';
+      return `<td>${v !== undefined ? v : ''}</td>`;
+    });
+    tbody.innerHTML += `<tr class="total-row">${totalCells.join('')}</tr>`;
+  }
+
+  // Totals row for 1.4
+  if (data.report === '1_4' && data.totals) {
+    const t = data.totals;
+    const totalCells = cols.map(c => {
+      if (c === 'Agent') return '<td><strong>Total</strong></td>';
+      return `<td>${t[c] !== undefined && t[c] !== '' ? t[c] : '-'}</td>`;
+    });
+    tbody.innerHTML += `<tr class="total-row">${totalCells.join('')}</tr>`;
+  }
+
+  // Total row for 1.11
+  if (data.report === '1_11' && data.totals) {
+    const t = data.totals;
+    const totalCells = cols.map(c => {
+      if (c === 'Agent') return '<td><strong>Total</strong></td>';
+      if (c === 'จำนวนครั้งที่สายเข้าจากคิว') return `<td><strong>${t.reserved ?? '-'}</strong></td>`;
+      if (c === 'จำนวนครั้งที่รับสายจากคิว') return `<td><strong>${t.talking ?? '-'}</strong></td>`;
+      if (c === '% รับสาย') return `<td><strong>${t.pct ?? '-'}</strong></td>`;
+      return '<td>-</td>';
+    });
+    tbody.innerHTML += `<tr class="total-row">${totalCells.join('')}</tr>`;
+  }
+
+  // Average row for 1.5
+  if (data.report === '1_5' && data.totals) {
+    const t = data.totals;
+    const avgCells = cols.map(c => {
+      if (c === 'Month') return '<td><strong>Average</strong></td>';
+      return `<td>${t[c] !== undefined && t[c] !== '' ? t[c] : '-'}</td>`;
+    });
+    tbody.innerHTML += `<tr class="total-row">${avgCells.join('')}</tr>`;
+  }
+}
+
+// ==================== Export ====================
+function exportExcel() {
+  if (!currentData) return;
+  showSpinner('กำลังประมวลผล...');
+  fetch('/api/export/' + currentReport + '/excel', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({data: currentData})
+  }).then(r => {
+    if (!r.ok) throw new Error('Export failed');
+    return r.blob();
+  }).then(blob => {
+    hideSpinner();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Lixil_Report_${currentReport}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Export Excel สำเร็จ', 'success');
+      }).catch(err => { hideSpinner(); showToast(String(err), 'error'); });
+}
+
+function exportPDF() {
+  if (!currentData) return;
+  window.print();
+}
+
+function clearData() {
+  if (currentReport === 'csat') {
+    resetCsatReport();
+    return;
+  }
+  if (currentReport === '1_6') {
+    resetNotReadyCountReport();
+    return;
+  }
+  if (['1_1', '1_2', '1_3', '1_4', '1_5', '1_7', '1_8', '1_9', '1_11'].includes(currentReport) && resetMockReport(currentReport)) {
+    return;
+  }
+  currentData = null;
+  destroyCharts();
+  document.getElementById('empty-state').style.display = 'block';
+  document.getElementById('report-content').style.display = 'none';
+  document.getElementById('charts-section').style.display = 'block';
+  document.getElementById('main-chart-wrap').style.maxWidth = '';
+  document.getElementById('secondary-charts').style.display = 'none';
+  document.getElementById('secondary-charts').innerHTML = '';
+  document.getElementById('pie-section').style.display = 'none';
+  document.getElementById('stat-cards').style.display = 'none';
+  document.getElementById('stat-cards').className = 'stat-grid';
+  document.getElementById('stat-cards').innerHTML = '';
+  document.getElementById('table-section').style.display = 'block';
+  document.getElementById('table-head').innerHTML = '';
+  document.getElementById('table-body').innerHTML = '';
+  enableButtons(false);
+}
+
+function enableButtons(enabled) {
+  document.getElementById('btn-excel').disabled = !enabled;
+  document.getElementById('btn-clear').disabled = !enabled;
+}
+
+function destroyCharts() {
+  Object.keys(charts).forEach(key => {
+    if (charts[key]) {
+      charts[key].destroy();
+    }
+  });
+  charts = {};
+}
+
+function showSpinner(text) {
+  document.getElementById('spinner-text').textContent = text || 'Processing...';
+  document.getElementById('spinner').classList.add('show');
+}
+
+function hideSpinner() {
+  document.getElementById('spinner').classList.remove('show');
+}
+
+function showToast(message, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = type || '';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function chartOptions(xTitle, yTitle, stacked) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' }
+    },
+    scales: {
+      x: {
+        stacked: !!stacked,
+        title: { display: !!xTitle, text: xTitle || '' }
+      },
+      y: {
+        stacked: !!stacked,
+        beginAtZero: true,
+        title: { display: !!yTitle, text: yTitle || '' }
+      }
+    }
+  };
+}
+
+// Initialize default UI state after all helpers are available.
+enableButtons(false);
+
+// Initial CSAT zero dashboard.
+resetCsatReport();
+</script>
+</body>
+</html>
+
+
