@@ -117,6 +117,20 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
 #table-section.card-box{box-shadow:none;border-radius:0;padding:0;margin-top:8px}
 #table-section h5{display:none}
 .csat-summary{padding:20px 20px 0 20px;background:#fff}
+
+/* Version info */
+.btn-version{margin-left:auto;background:#fff;color:var(--navy);border:1px solid #d9dee8;padding:8px 14px;border-radius:0;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+.btn-version:hover{border-color:var(--orange);color:var(--orange)}
+.version-modal{position:fixed;inset:0;background:rgba(13,27,53,0.45);display:none;align-items:center;justify-content:center;z-index:10000;padding:24px}
+.version-modal.show{display:flex}
+.version-panel{width:min(560px,100%);background:#fff;border-radius:8px;box-shadow:0 18px 40px rgba(0,0,0,0.24);overflow:hidden}
+.version-head{background:var(--navy);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.version-head h2{font-size:15px;margin:0;font-weight:700}
+.version-close{background:transparent;border:0;color:#fff;font-size:22px;line-height:1;cursor:pointer;padding:0 4px}
+.version-body{padding:18px;color:#263247;font-size:13px;line-height:1.55}
+.version-body .version-badge{display:inline-block;background:#fff3ee;color:var(--orange);border:1px solid #ffd5c4;padding:3px 8px;font-weight:700;margin-bottom:10px}
+.version-body ul{margin:10px 0 0 18px;padding:0}
+.version-body li{margin:6px 0}
 </style>
 </head>
 <body>
@@ -184,7 +198,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
 <!-- Main -->
 <div id="main">
   <div id="topbar">
-    <h1 id="topbar-title">CSAT Report</h1>
+    <h1 id="topbar-title">CSAT Report</h1>
   </div>
 
   <div id="content">
@@ -192,6 +206,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
       <button class="btn-lixil" onclick="triggerUpload()" id="btn-import">↑ Import Data</button>
       <button class="btn-excel" onclick="exportExcel()" id="btn-excel" disabled>↓ Export Data</button>
       <button class="btn-navy" onclick="clearData()" id="btn-clear" disabled>⌫ Clear Data</button>
+      <button class="btn-version" onclick="showVersionInfo()" id="btn-version">Version v0.4.0</button>
     </div>
     <!-- Empty state -->
     <div id="empty-state" style="display:none">
@@ -257,6 +272,27 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
   <footer id="app-footer">Lixil Reports &copy;2024 Created by iTAS Solutions Co., Ltd.</footer>
 </div>
 
+
+<!-- Version modal -->
+<div id="version-modal" class="version-modal" onclick="hideVersionInfo(event)">
+  <div class="version-panel" role="dialog" aria-modal="true" aria-labelledby="version-title">
+    <div class="version-head">
+      <h2 id="version-title">LIXIL Report Auto - Version Info</h2>
+      <button class="version-close" type="button" onclick="hideVersionInfo()" aria-label="Close">&times;</button>
+    </div>
+    <div class="version-body">
+      <div class="version-badge">v0.4.0 / 2026-06-11</div>
+      <p><strong>รายการอัปเดตล่าสุด</strong></p>
+      <ul>
+        <li>เพิ่มหน้า CSAT Report ให้แสดง summary/table แบบหน้าระบบเดิมทั้งก่อนและหลัง import</li>
+        <li>รองรับ sample CSAT จริงจาก Cisco Call Custom Variables Report</li>
+        <li>แก้ช่อง Total Calls ไม่ให้ cursor หลุดระหว่างกรอกตัวเลข</li>
+        <li>ปรับ Export Excel ทุก module ให้ชื่อไฟล์เป็น converted_ชื่อไฟล์ที่ import.xlsx</li>
+        <li>เตรียมโครงสร้างให้ใช้งานแบบ offline/local server ของลูกค้า</li>
+      </ul>
+    </div>
+  </div>
+</div>
 <!-- Hidden file input -->
 <input type="file" id="file-input" accept=".xls,.xlsx,.csv" style="display:none" onchange="handleFile(this)">
 
@@ -270,6 +306,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
 // ==================== State ====================
 let currentReport = 'csat';
 let currentData   = null;
+let currentSourceFilename = '';
 let charts        = {};
 
 const REPORT_META = {
@@ -296,6 +333,20 @@ const CHART_COLORS = {
 };
 const PIE_COLORS = ['#F15A22','#2196F3','#FFC107','#27ae60','#9b59b6','#e74c3c','#1abc9c','#f39c12'];
 
+
+function rememberSourceFilename(data, fileName) {
+  currentData = data;
+  if (fileName) currentSourceFilename = fileName;
+  if (currentData && currentSourceFilename) currentData.sourceFilename = currentSourceFilename;
+}
+
+function getConvertedFilename() {
+  const source = (currentData && currentData.sourceFilename) || currentSourceFilename || '';
+  const cleaned = source.split(/[\\/]/).pop().trim();
+  if (!cleaned) return 'converted_' + currentReport + '.xlsx';
+  const stem = cleaned.replace(/\.[^.]+$/, '');
+  return 'converted_' + (stem || cleaned) + '.xlsx';
+}
 
 function makeEmptyCsatData() {
   return {
@@ -489,6 +540,7 @@ function makeEmptyReportData(reportId) {
 }
 
 function resetCsatReport() {
+  currentSourceFilename = '';
   currentData = makeEmptyCsatData();
   destroyCharts();
   render_csat(currentData);
@@ -496,6 +548,7 @@ function resetCsatReport() {
 }
 
 function resetNotReadyCountReport() {
+  currentSourceFilename = '';
   currentData = makeEmptyNotReadyCountData();
   render_1_6(currentData);
   enableButtons(false);
@@ -504,6 +557,7 @@ function resetNotReadyCountReport() {
 function resetMockReport(reportId) {
   const mockData = makeEmptyReportData(reportId);
   if (!mockData) return false;
+  currentSourceFilename = '';
   currentData = mockData;
   document.getElementById('empty-state').style.display = 'none';
   document.getElementById('report-content').style.display = 'block';
@@ -544,8 +598,8 @@ function handleFile(input) {
     .then(res => {
       hideSpinner();
       if (res.success) {
-        currentData = res.data;
-        renderReport(res.data);
+        rememberSourceFilename(res.data, file.name);
+        renderReport(currentData);
         enableButtons(true);
         showToast('นำเข้าข้อมูลสำเร็จ', 'success');
       } else {
@@ -573,7 +627,7 @@ emptyState.addEventListener('drop', e => {
       .then(r => r.json())
       .then(res => {
         hideSpinner();
-        if (res.success) { currentData = res.data; renderReport(res.data); enableButtons(true); showToast('สำเร็จ', 'success'); }
+        if (res.success) { rememberSourceFilename(res.data, file.name); renderReport(currentData); enableButtons(true); showToast('สำเร็จ', 'success'); }
         else { showToast('Error: ' + res.error, 'error'); }
       }).catch(err => { hideSpinner(); showToast(String(err), 'error'); });
   }
@@ -1025,7 +1079,7 @@ function exportExcel() {
   fetch('/api/export/' + currentReport + '/excel', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({data: currentData})
+    body: JSON.stringify({data: currentData, sourceFilename: (currentData && currentData.sourceFilename) || currentSourceFilename})
   }).then(r => {
     if (!r.ok) throw new Error('Export failed');
     return r.blob();
@@ -1034,7 +1088,7 @@ function exportExcel() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Lixil_Report_${currentReport}.xlsx`;
+    a.download = getConvertedFilename();
     a.click();
     URL.revokeObjectURL(url);
     showToast('Export Excel สำเร็จ', 'success');
@@ -1058,6 +1112,7 @@ function clearData() {
   if (['1_1', '1_2', '1_3', '1_4', '1_5', '1_7', '1_8', '1_9', '1_11'].includes(currentReport) && resetMockReport(currentReport)) {
     return;
   }
+  currentSourceFilename = '';
   currentData = null;
   destroyCharts();
   document.getElementById('empty-state').style.display = 'block';
@@ -1090,6 +1145,15 @@ function destroyCharts() {
   charts = {};
 }
 
+
+function showVersionInfo() {
+  document.getElementById('version-modal').classList.add('show');
+}
+
+function hideVersionInfo(event) {
+  if (event && event.target.id !== 'version-modal') return;
+  document.getElementById('version-modal').classList.remove('show');
+}
 function showSpinner(text) {
   document.getElementById('spinner-text').textContent = text || 'Processing...';
   document.getElementById('spinner').classList.add('show');

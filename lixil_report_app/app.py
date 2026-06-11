@@ -1,5 +1,5 @@
 ﻿from flask import Flask, render_template, request, jsonify, send_file
-import io, traceback, webbrowser, threading, time
+import io, os, re, traceback, webbrowser, threading, time
 from config import APP_HOST, APP_PORT, AUTO_OPEN_BROWSER, SHOW_ERROR_TRACE, MAX_UPLOAD_MB
 
 app = Flask(__name__)
@@ -38,6 +38,16 @@ REPORT_NAMES = {
     '1_10': 'Voicemail', '1_11': 'Reserved_Talking_Ratio'
 }
 
+def converted_download_name(report_id, payload):
+    data = payload.get('data') if isinstance(payload, dict) else {}
+    source = payload.get('sourceFilename') or (data or {}).get('sourceFilename') or ''
+    source = os.path.basename(str(source)).strip()
+    if not source:
+        source = REPORT_NAMES.get(report_id, f'report_{report_id}')
+    stem = re.sub(r'\.[^.]+$', '', source)
+    safe_stem = re.sub(r'[\\/:*?"<>|]+', '_', stem).strip(' ._') or REPORT_NAMES.get(report_id, f'report_{report_id}')
+    return f'converted_{safe_stem}.xlsx'
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -68,12 +78,11 @@ def export_excel(report_id):
     try:
         payload = request.json or {}
         excel_bytes = EXPORTERS[report_id](payload)
-        name = REPORT_NAMES.get(report_id, f'report_{report_id}')
         return send_file(
             io.BytesIO(excel_bytes),
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
-            download_name=f'Lixil_{name}.xlsx'
+            download_name=converted_download_name(report_id, payload)
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
