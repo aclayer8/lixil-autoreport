@@ -155,19 +155,19 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
   </div>
   <div class="nav-item" onclick="selectReport('1_2')" id="nav-1_2">
     <span class="num">1.2</span>
-    <span>รายงานจำนวนสายเข้าเฉลี่ยรายชั่วโมง</span>
+    <span>รายงานจำนวนสายเข้าเฉลี่ยรายชั่วโมง (CSQ Hour)</span>
   </div>
   <div class="nav-item" onclick="selectReport('1_3')" id="nav-1_3">
     <span class="num">1.3</span>
-    <span>สถานะเอเจนต์รายวัน</span>
+    <span>สถานะเอเจนต์รายวัน (All States Day)</span>
   </div>
   <div class="nav-item" onclick="selectReport('1_4')" id="nav-1_4">
     <span class="num">1.4</span>
-    <span>สรุปสถานะรวมของเอเจนต์ทุกคน</span>
+    <span>สรุปสถานะรวมของเอเจนต์ทุกคน (All Agents All States Month)</span>
   </div>
   <div class="nav-item" onclick="selectReport('1_5')" id="nav-1_5">
     <span class="num">1.5</span>
-    <span>สถานะเอเจนต์ YTD</span>
+    <span>สถานะเอเจนต์ YTD (All States YTD)</span>
   </div>
   <div class="nav-item" onclick="selectReport('1_6')" id="nav-1_6">
     <span class="num">1.6</span>
@@ -206,7 +206,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
       <button class="btn-lixil" onclick="triggerUpload()" id="btn-import">↑ Import Data</button>
       <button class="btn-excel" onclick="exportExcel()" id="btn-excel" disabled>↓ Export Data</button>
       <button class="btn-navy" onclick="clearData()" id="btn-clear" disabled>⌫ Clear Data</button>
-      <button class="btn-version" onclick="showVersionInfo()" id="btn-version">Version v0.4.0</button>
+      <button class="btn-version" onclick="showVersionInfo()" id="btn-version">Version v0.4.1</button>
     </div>
     <!-- Empty state -->
     <div id="empty-state" style="display:none">
@@ -281,14 +281,12 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
       <button class="version-close" type="button" onclick="hideVersionInfo()" aria-label="Close">&times;</button>
     </div>
     <div class="version-body">
-      <div class="version-badge">v0.4.0 / 2026-06-11</div>
+      <div class="version-badge">v0.4.1 / 2026-07-27</div>
       <p><strong>รายการอัปเดตล่าสุด</strong></p>
       <ul>
-        <li>เพิ่มหน้า CSAT Report ให้แสดง summary/table แบบหน้าระบบเดิมทั้งก่อนและหลัง import</li>
-        <li>รองรับ sample CSAT จริงจาก Cisco Call Custom Variables Report</li>
-        <li>แก้ช่อง Total Calls ไม่ให้ cursor หลุดระหว่างกรอกตัวเลข</li>
-        <li>ปรับ Export Excel ทุก module ให้ชื่อไฟล์เป็น converted_ชื่อไฟล์ที่ import.xlsx</li>
-        <li>เตรียมโครงสร้างให้ใช้งานแบบ offline/local server ของลูกค้า</li>
+        <li>เพิ่มชื่อรายงานภาษาอังกฤษในเมนู 1.2 ถึง 1.5 เพื่อให้ตรงกับชื่อรายงานต้นทางจาก Cisco</li>
+        <li>ปรับชื่อเมนูด้านซ้ายและหัวข้อรายงานหลักให้แสดงข้อความตรงกัน</li>
+        <li>คงชื่อและการทำงานของ CSAT Report, 1.1 และ 1.6 ถึง 1.11 ไว้ตามเดิม</li>
       </ul>
     </div>
   </div>
@@ -312,10 +310,10 @@ let charts        = {};
 const REPORT_META = {
   'csat': {title:'CSAT Report', file:'CSAT Survey (.xlsx)'},
   '1_1': {title:'1.1 รายงานจำนวนสายที่เข้ามาในคิวของคอนแทคเซ็นเตอร์', file:'CSQ Day (.xls)'},
-  '1_2': {title:'1.2 รายงานจำนวนสายเข้าเฉลี่ยรายชั่วโมง', file:'CSQ Hour (.xls)'},
-  '1_3': {title:'1.3 รายงานสถานะเอเจนต์รายวัน', file:'Agent-All States-DAY (.xls)'},
-  '1_4': {title:'1.4 รายงานสรุปสถานะรวมของเอเจนต์ทุกคน', file:'All Agents-All States-Month (.xls)'},
-  '1_5': {title:'1.5 สรุปข้อมูลสถานะเอเจนต์ตั้งแต่ต้นปี (YTD)', file:'Agent-All States-YTD (.xls)'},
+  '1_2': {title:'1.2 รายงานจำนวนสายเข้าเฉลี่ยรายชั่วโมง (CSQ Hour)', file:'CSQ Hour (.xls)'},
+  '1_3': {title:'1.3 สถานะเอเจนต์รายวัน (All States Day)', file:'Agent-All States-DAY (.xls)'},
+  '1_4': {title:'1.4 สรุปสถานะรวมของเอเจนต์ทุกคน (All Agents All States Month)', file:'All Agents-All States-Month (.xls)'},
+  '1_5': {title:'1.5 สถานะเอเจนต์ YTD (All States YTD)', file:'Agent-All States-YTD (.xls)'},
   '1_6': {title:'1.6 รายงาน Not Ready Count แบ่งตามโค้ด', file:'Agent-Not Ready Count (.xls)'},
   '1_7': {title:'1.7 รายงาน Login/Logout ของเอเจนต์', file:'Agent-Login Logout-DAY (.xls)'},
   '1_8': {title:'1.8 จำนวนครั้งที่ลูกค้ากดฟัง Audio Text การบำรุงรักษา', file:'Audio Text-Maintenance (.xls)'},
