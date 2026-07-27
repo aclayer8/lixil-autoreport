@@ -206,7 +206,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
       <button class="btn-lixil" onclick="triggerUpload()" id="btn-import">↑ Import Data</button>
       <button class="btn-excel" onclick="exportExcel()" id="btn-excel" disabled>↓ Export Data</button>
       <button class="btn-navy" onclick="clearData()" id="btn-clear" disabled>⌫ Clear Data</button>
-      <button class="btn-version" onclick="showVersionInfo()" id="btn-version">Version v0.4.1</button>
+      <button class="btn-version" onclick="showVersionInfo()" id="btn-version">Version v0.4.2</button>
     </div>
     <!-- Empty state -->
     <div id="empty-state" style="display:none">
@@ -223,21 +223,27 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
         <div class="csat-tab-title">CSAT Report</div>
         <div class="csat-metric-row csat-row-top">
           <div class="csat-metric-card">
-            <div class="csat-label strong">Total Calls:</div>
+            <div class="csat-label strong">Total Calls</div>
             <input class="csat-total-input" type="number" min="0" value="0" onchange="recalcCsat(this.value)" onblur="recalcCsat(this.value)">
           </div>
-          <div class="csat-metric-card"><div class="csat-label">Total Calls Survey</div><div class="csat-value" style="color:#2f6fff">0</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Calls Survey</div><div class="csat-value" style="color:#2f6fff">0</div></div>
           <div class="csat-metric-card"><div class="csat-label">Point 0</div><div class="csat-value" style="color:#666">0</div></div>
           <div class="csat-metric-card"><div class="csat-label">Point 1 - 6</div><div class="csat-value" style="color:#ff0000">0</div></div>
           <div class="csat-metric-card"><div class="csat-label">Point 7 - 8</div><div class="csat-value" style="color:#ff8a00">0</div></div>
           <div class="csat-metric-card"><div class="csat-label">Point 9 - 10</div><div class="csat-value" style="color:#52c41a">0</div></div>
         </div>
         <div class="csat-metric-row csat-row-bottom">
-          <div class="csat-metric-card"><div class="csat-label">Total Calls Survey (%)</div><div class="csat-value" style="color:#2f6fff">0.00</div></div>
-          <div class="csat-metric-card"><div class="csat-label">Total % of Promoters</div><div class="csat-value" style="color:#2f6fff">0.00</div></div>
-          <div class="csat-metric-card"><div class="csat-label">Total % of Detractors</div><div class="csat-value" style="color:#666">0.00</div></div>
-          <div class="csat-metric-card"><div class="csat-label">Net Promoter Score</div><div class="csat-value" style="color:#ff0000">0.00</div></div>
-          <div class="csat-metric-card"><div class="csat-label">Response Rate</div><div class="csat-value" style="color:#ff8a00">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Calls Survey Point 1-10 (%)</div><div class="csat-value" style="color:#2f6fff">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Calls Survey % of Point 9-10</div><div class="csat-value" style="color:#52c41a">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Calls Survey % of Point 1-6</div><div class="csat-value" style="color:#ff0000">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Calls Survey Net Promoter Score</div><div class="csat-value" style="color:#ff0000">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Calls Survey Response Rate</div><div class="csat-value" style="color:#ff8a00">0.00</div></div>
+        </div>
+        <div class="csat-metric-row csat-row-bottom">
+          <div class="csat-metric-card"><div class="csat-label">Total Calls (%)</div><div class="csat-value" style="color:#2f6fff">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Total calls % of Point 9-10</div><div class="csat-value" style="color:#52c41a">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Total calls % of Point 1-6</div><div class="csat-value" style="color:#ff0000">0.00</div></div>
+          <div class="csat-metric-card"><div class="csat-label">Total Calls Net Promoter Score</div><div class="csat-value" style="color:#ff0000">0.00</div></div>
           <div class="csat-metric-card"><div class="csat-label">Total Call Response Rate</div><div class="csat-value" style="color:#ff8a00">0.00</div></div>
         </div>
       </div>
@@ -281,12 +287,12 @@ body{font-family:'Segoe UI',sans-serif;background:#f0f2f5;display:flex;height:10
       <button class="version-close" type="button" onclick="hideVersionInfo()" aria-label="Close">&times;</button>
     </div>
     <div class="version-body">
-      <div class="version-badge">v0.4.1 / 2026-07-27</div>
+      <div class="version-badge">v0.4.2 / 2026-07-27</div>
       <p><strong>รายการอัปเดตล่าสุด</strong></p>
       <ul>
-        <li>เพิ่มชื่อรายงานภาษาอังกฤษในเมนู 1.2 ถึง 1.5 เพื่อให้ตรงกับชื่อรายงานต้นทางจาก Cisco</li>
-        <li>ปรับชื่อเมนูด้านซ้ายและหัวข้อรายงานหลักให้แสดงข้อความตรงกัน</li>
-        <li>คงชื่อและการทำงานของ CSAT Report, 1.1 และ 1.6 ถึง 1.11 ไว้ตามเดิม</li>
+        <li>ปรับ CSAT Report เป็นรูปแบบสรุป 3 ส่วนตามผลลัพธ์ที่กำหนด</li>
+        <li>เพิ่มการคำนวณเปอร์เซ็นต์และ Net Promoter Score แยกตาม Calls Survey และ Total Calls</li>
+        <li>ปรับ Excel Export ให้ใช้หัวข้อและลำดับข้อมูลแบบใหม่</li>
       </ul>
     </div>
   </div>
@@ -363,6 +369,15 @@ function makeEmptyCsatData() {
       netPromoterScore: 0,
       responseRate: 0,
       totalCallResponseRate: 0,
+      callsSurveyPoint1_10Percentage: 0,
+      callsSurveyPercentagePoint9_10: 0,
+      callsSurveyPercentagePoint1_6: 0,
+      callsSurveyNetPromoterScore: 0,
+      callsSurveyResponseRate: 0,
+      totalCallsPercentage: 0,
+      totalCallsPercentagePoint9_10: 0,
+      totalCallsPercentagePoint1_6: 0,
+      totalCallsNetPromoterScore: 0,
     },
     columns: ['Node ID - Session ID - Sequence No', 'Time', 'Application Name', 'Agent Name', 'Agent Extension', 'Calling Number', 'Score'],
     table: [],
@@ -673,6 +688,10 @@ function recalcCsat(totalCalls) {
   const calls = Math.max(parseInt(totalCalls, 10) || 0, 0);
   const promoters = answered ? (point9_10 * 100 / answered) : 0;
   const detractors = answered ? (point1_6 * 100 / answered) : 0;
+  const surveyResponseRate = totalSurvey ? (answered * 100 / totalSurvey) : 0;
+  const totalCallsPercentage = calls ? (totalSurvey * 100 / calls) : 0;
+  const totalPoint9_10Percentage = calls ? (point9_10 * 100 / calls) : 0;
+  const totalPoint1_6Percentage = calls ? (point1_6 * 100 / calls) : 0;
   currentData.metrics = {
     totalCalls: calls,
     totalCallsSurvey: totalSurvey,
@@ -680,12 +699,21 @@ function recalcCsat(totalCalls) {
     point1_6,
     point7_8,
     point9_10,
-    totalCallsSurveyPercentage: calls ? (totalSurvey * 100 / calls) : 0,
+    totalCallsSurveyPercentage: totalCallsPercentage,
     totalPercentageOfPromoters: promoters,
     totalPercentageOfDetractors: detractors,
     netPromoterScore: promoters - detractors,
-    responseRate: totalSurvey ? (answered * 100 / totalSurvey) : 0,
+    responseRate: surveyResponseRate,
     totalCallResponseRate: calls ? ((point1_6 + point7_8 + point9_10) * 100 / calls) : 0,
+    callsSurveyPoint1_10Percentage: surveyResponseRate,
+    callsSurveyPercentagePoint9_10: promoters,
+    callsSurveyPercentagePoint1_6: detractors,
+    callsSurveyNetPromoterScore: promoters - detractors,
+    callsSurveyResponseRate: surveyResponseRate,
+    totalCallsPercentage,
+    totalCallsPercentagePoint9_10: totalPoint9_10Percentage,
+    totalCallsPercentagePoint1_6: totalPoint1_6Percentage,
+    totalCallsNetPromoterScore: totalPoint9_10Percentage - totalPoint1_6Percentage,
   };
   render_csat(currentData);
 }
@@ -699,6 +727,15 @@ function metricCard(label, value, color) {
 
 function render_csat(data) {
   const metrics = data.metrics || {};
+  const callsSurveyPoint1_10Percentage = metrics.callsSurveyPoint1_10Percentage ?? metrics.responseRate ?? 0;
+  const callsSurveyPercentagePoint9_10 = metrics.callsSurveyPercentagePoint9_10 ?? metrics.totalPercentageOfPromoters ?? 0;
+  const callsSurveyPercentagePoint1_6 = metrics.callsSurveyPercentagePoint1_6 ?? metrics.totalPercentageOfDetractors ?? 0;
+  const callsSurveyNetPromoterScore = metrics.callsSurveyNetPromoterScore ?? metrics.netPromoterScore ?? 0;
+  const callsSurveyResponseRate = metrics.callsSurveyResponseRate ?? metrics.responseRate ?? 0;
+  const totalCallsPercentage = metrics.totalCallsPercentage ?? metrics.totalCallsSurveyPercentage ?? 0;
+  const totalCallsPercentagePoint9_10 = metrics.totalCallsPercentagePoint9_10 ?? 0;
+  const totalCallsPercentagePoint1_6 = metrics.totalCallsPercentagePoint1_6 ?? 0;
+  const totalCallsNetPromoterScore = metrics.totalCallsNetPromoterScore ?? 0;
   document.getElementById('charts-section').style.display = 'none';
   document.getElementById('secondary-charts').style.display = 'none';
   document.getElementById('pie-section').style.display = 'none';
@@ -711,21 +748,27 @@ function render_csat(data) {
     <div class="csat-tab-title">CSAT Report</div>
     <div class="csat-metric-row csat-row-top">
       <div class="csat-metric-card">
-        <div class="csat-label strong">Total Calls:</div>
+        <div class="csat-label strong">Total Calls</div>
         <input class="csat-total-input" type="number" min="0" value="${metrics.totalCalls || 0}" onchange="recalcCsat(this.value)" onblur="recalcCsat(this.value)">
       </div>
-      ${metricCard('Total Calls Survey', fmtNumber(metrics.totalCallsSurvey), '#2f6fff')}
+      ${metricCard('Calls Survey', fmtNumber(metrics.totalCallsSurvey), '#2f6fff')}
       ${metricCard('Point 0', fmtNumber(metrics.point0), '#666')}
       ${metricCard('Point 1 - 6', fmtNumber(metrics.point1_6), '#ff0000')}
       ${metricCard('Point 7 - 8', fmtNumber(metrics.point7_8), '#ff8a00')}
       ${metricCard('Point 9 - 10', fmtNumber(metrics.point9_10), '#52c41a')}
     </div>
     <div class="csat-metric-row csat-row-bottom">
-      ${metricCard('Total Calls Survey (%)', fmtNumber(metrics.totalCallsSurveyPercentage, 2), '#2f6fff')}
-      ${metricCard('Total % of Promoters', fmtNumber(metrics.totalPercentageOfPromoters, 2), '#2f6fff')}
-      ${metricCard('Total % of Detractors', fmtNumber(metrics.totalPercentageOfDetractors, 2), '#666')}
-      ${metricCard('Net Promoter Score', fmtNumber(metrics.netPromoterScore, 2), '#ff0000')}
-      ${metricCard('Response Rate', fmtNumber(metrics.responseRate, 2), '#ff8a00')}
+      ${metricCard('Calls Survey Point 1-10 (%)', fmtNumber(callsSurveyPoint1_10Percentage, 2), '#2f6fff')}
+      ${metricCard('Calls Survey % of Point 9-10', fmtNumber(callsSurveyPercentagePoint9_10, 2), '#52c41a')}
+      ${metricCard('Calls Survey % of Point 1-6', fmtNumber(callsSurveyPercentagePoint1_6, 2), '#ff0000')}
+      ${metricCard('Calls Survey Net Promoter Score', fmtNumber(callsSurveyNetPromoterScore, 2), '#ff0000')}
+      ${metricCard('Calls Survey Response Rate', fmtNumber(callsSurveyResponseRate, 2), '#ff8a00')}
+    </div>
+    <div class="csat-metric-row csat-row-bottom">
+      ${metricCard('Total Calls (%)', fmtNumber(totalCallsPercentage, 2), '#2f6fff')}
+      ${metricCard('Total calls % of Point 9-10', fmtNumber(totalCallsPercentagePoint9_10, 2), '#52c41a')}
+      ${metricCard('Total calls % of Point 1-6', fmtNumber(totalCallsPercentagePoint1_6, 2), '#ff0000')}
+      ${metricCard('Total Calls Net Promoter Score', fmtNumber(totalCallsNetPromoterScore, 2), '#ff0000')}
       ${metricCard('Total Call Response Rate', fmtNumber(metrics.totalCallResponseRate, 2), '#ff8a00')}
     </div>
   `;

@@ -2,6 +2,15 @@
 
 All notable changes to LIXIL Auto Report are documented in this file.
 
+## [0.4.2] - 2026-07-27
+
+### Changed
+
+- Updated the CSAT summary to use the requested three-section metric layout.
+- Added separate Calls Survey and Total Calls percentage and Net Promoter Score calculations.
+- Updated CSAT Excel exports to match the new headings and metric grouping.
+- Validated the CSAT import and calculations against the supplied December source workbook and expected output.
+
 ## [0.4.1] - 2026-07-27
 
 ### Changed
