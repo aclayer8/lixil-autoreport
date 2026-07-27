@@ -219,6 +219,8 @@ def calculate_metrics(records: list, total_calls=None) -> dict:
     detractors = (point1_6 / answered * 100) if answered else 0
     response_rate = (answered / total_survey * 100) if total_survey else 0
     total_calls_survey_pct = (total_survey / total_calls * 100) if total_calls else 0
+    total_point9_10_pct = (point9_10 / total_calls * 100) if total_calls else 0
+    total_point1_6_pct = (point1_6 / total_calls * 100) if total_calls else 0
     total_call_response_rate = ((point1_6 + point7_8 + point9_10) / total_calls * 100) if total_calls else 0
     return {
         'totalCalls': total_calls,
@@ -233,6 +235,15 @@ def calculate_metrics(records: list, total_calls=None) -> dict:
         'netPromoterScore': round(promoters - detractors, 2),
         'responseRate': round(response_rate, 2),
         'totalCallResponseRate': round(total_call_response_rate, 2),
+        'callsSurveyPoint1_10Percentage': round(response_rate, 2),
+        'callsSurveyPercentagePoint9_10': round(promoters, 2),
+        'callsSurveyPercentagePoint1_6': round(detractors, 2),
+        'callsSurveyNetPromoterScore': round(promoters - detractors, 2),
+        'callsSurveyResponseRate': round(response_rate, 2),
+        'totalCallsPercentage': round(total_calls_survey_pct, 2),
+        'totalCallsPercentagePoint9_10': round(total_point9_10_pct, 2),
+        'totalCallsPercentagePoint1_6': round(total_point1_6_pct, 2),
+        'totalCallsNetPromoterScore': round(total_point9_10_pct - total_point1_6_pct, 2),
     }
 
 
@@ -270,14 +281,33 @@ def export_excel(payload: dict) -> bytes:
     border = Border(left=Side(style='thin', color='DDDDDD'), right=Side(style='thin', color='DDDDDD'),
                     top=Side(style='thin', color='DDDDDD'), bottom=Side(style='thin', color='DDDDDD'))
 
-    summary_cols = ['Total Calls', 'Total Calls Survey', 'Point 0', 'Point 1 - 6', 'Point 7 - 8', 'Point 9 - 10']
+    summary_cols = ['Total Calls', 'Calls Survey', 'Point 0', 'Point 1 - 6', 'Point 7 - 8', 'Point 9 - 10']
     summary_vals = [metrics['totalCalls'], metrics['totalCallsSurvey'], metrics['point0'],
                     metrics['point1_6'], metrics['point7_8'], metrics['point9_10']]
-    calc_cols = ['Total Calls Survey (%)', 'Total % of Promoters', 'Total % of Detractors',
-                 'Net Promoter Score', 'Response Rate', 'Total Call Response Rate']
-    calc_vals = [metrics['totalCallsSurveyPercentage'], metrics['totalPercentageOfPromoters'],
-                 metrics['totalPercentageOfDetractors'], metrics['netPromoterScore'],
-                 metrics['responseRate'], metrics['totalCallResponseRate']]
+    survey_cols = ['Calls Survey Point 1-10 (%)', 'Calls Survey % of Point 9-10',
+                   'Calls Survey % of Point 1-6', 'Calls Survey Net Promoter Score',
+                   'Calls Survey Response Rate']
+    survey_vals = [metrics.get('callsSurveyPoint1_10Percentage', metrics.get('responseRate', 0)),
+                   metrics.get('callsSurveyPercentagePoint9_10', metrics.get('totalPercentageOfPromoters', 0)),
+                   metrics.get('callsSurveyPercentagePoint1_6', metrics.get('totalPercentageOfDetractors', 0)),
+                   metrics.get('callsSurveyNetPromoterScore', metrics.get('netPromoterScore', 0)),
+                   metrics.get('callsSurveyResponseRate', metrics.get('responseRate', 0))]
+    total_calls = metrics.get('totalCalls', 0)
+    total_point9_10_pct = metrics.get(
+        'totalCallsPercentagePoint9_10',
+        (metrics.get('point9_10', 0) / total_calls * 100) if total_calls else 0,
+    )
+    total_point1_6_pct = metrics.get(
+        'totalCallsPercentagePoint1_6',
+        (metrics.get('point1_6', 0) / total_calls * 100) if total_calls else 0,
+    )
+    total_cols = ['Total Calls (%)', 'Total calls % of Point 9-10',
+                  'Total calls % of Point 1-6', 'Total Calls Net Promoter Score',
+                  'Total Call Response Rate']
+    total_vals = [metrics.get('totalCallsPercentage', metrics.get('totalCallsSurveyPercentage', 0)),
+                  total_point9_10_pct, total_point1_6_pct,
+                  metrics.get('totalCallsNetPromoterScore', total_point9_10_pct - total_point1_6_pct),
+                  metrics.get('totalCallResponseRate', 0)]
 
     for c, name in enumerate(summary_cols, 9):
         cell = ws.cell(1, c, name)
@@ -285,12 +315,18 @@ def export_excel(payload: dict) -> bytes:
         cell.font = white_font
         cell.alignment = Alignment(horizontal='center')
         ws.cell(2, c, summary_vals[c - 9])
-    for c, name in enumerate(calc_cols, 9):
+    for c, name in enumerate(survey_cols, 9):
         cell = ws.cell(4, c, name)
         cell.fill = orange_fill
         cell.font = white_font
         cell.alignment = Alignment(horizontal='center')
-        ws.cell(5, c, calc_vals[c - 9])
+        ws.cell(5, c, survey_vals[c - 9])
+    for c, name in enumerate(total_cols, 9):
+        cell = ws.cell(7, c, name)
+        cell.fill = orange_fill
+        cell.font = white_font
+        cell.alignment = Alignment(horizontal='center')
+        ws.cell(8, c, total_vals[c - 9])
 
     for c, name in enumerate(cols, 1):
         cell = ws.cell(1, c, name)
